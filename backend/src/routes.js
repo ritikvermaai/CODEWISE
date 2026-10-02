@@ -4,7 +4,7 @@ import { requireAuth } from "./middleware/auth.js";
 import { upload, audioUpload } from "./middleware/upload.js";
 import { register, login, me, verifyEmail, resendOtp, forgotPassword, resetPassword } from "./controllers/auth.js";
 import { list, create, get, send, remove } from "./controllers/chats.js";
-import { account, update, remove as deleteAccount } from "./controllers/account.js";
+import { account, update, changeEmail, changePassword, logoutAll, remove as deleteAccount } from "./controllers/account.js";
 import { transcribeVoice } from "./controllers/voice.js";
 
 const r = Router();
@@ -28,6 +28,9 @@ r.delete("/chats/:id", requireAuth, asyncRoute(remove));
 r.post("/voice/transcribe", requireAuth, audioUpload.single("audio"), asyncRoute(transcribeVoice));
 r.get("/account", requireAuth, asyncRoute(account));
 r.patch("/account", requireAuth, asyncRoute(update));
+r.patch("/account/email", requireAuth, asyncRoute(changeEmail));
+r.patch("/account/password", requireAuth, asyncRoute(changePassword));
+r.post("/account/logout-all", requireAuth, asyncRoute(logoutAll));
 r.delete("/account", requireAuth, asyncRoute(deleteAccount));
 
 export default r;
