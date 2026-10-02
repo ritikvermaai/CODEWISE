@@ -6,9 +6,6 @@ if (!process.env.JWT_SECRET || !process.env.DATA_ENCRYPTION_KEY) {
   throw new Error("JWT_SECRET and DATA_ENCRYPTION_KEY are required");
 }
 
-// Trust Render's reverse proxy
-app.set("trust proxy", 1);
-
 await connectDB();
 
 const PORT = process.env.PORT || 5000;
