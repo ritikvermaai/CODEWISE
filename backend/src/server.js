@@ -1,0 +1,1 @@
+import "dotenv/config";import app from "./app.js";import {connectDB} from "./config/db.js";if(!process.env.JWT_SECRET||!process.env.DATA_ENCRYPTION_KEY)throw new Error("JWT_SECRET and DATA_ENCRYPTION_KEY are required");await connectDB();app.listen(process.env.PORT||5000,()=>console.log("API http://localhost:5000"));
