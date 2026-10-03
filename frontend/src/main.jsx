@@ -2,8 +2,6 @@ import React,{useEffect,useRef,useState}from"react";import{createRoot}from"react
 
 const escapeHtml=value=>String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;");
 function renderInline(value){
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const source=String(value??"");
   const parts=[];
   const pattern=/(`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*)/g;
@@ -30,9 +28,21 @@ function RichText({value}){
     if(heading){flush();const level=Math.min(6,(heading[0].match(/^#+/)||["#"])[0].length);const Tag=`h${level}`;blocks.push(<Tag key={`h-${i}`}>{renderInline(heading[1])}</Tag>);return;}
     const bullet=line.match(/^[-*+]\s+(.+)$/);
     if(bullet){list.push(bullet[1]);return;}
+    const numbered=line.match(/^\d+[.)]\s+(.+)$/);
+    if(numbered){
+      flush();
+      const prev=blocks.at(-1);
+      if(prev?.type==="ol"){blocks[blocks.length-1]={...prev,props:{...prev.props,children:[...(prev.props?.children||[]),<li key={`ol-li-${i}`}>{renderInline(numbered[1])}</li>]}};}
+      else blocks.push(<ol key={`ol-${i}`}><li>{renderInline(numbered[1])}</li></ol>);
+      return;
+    }
     flush();
     const clean=line.replace(/^---+$/g,"").trim();
-    if(clean)blocks.push(<p key={`p-${i}`}>{renderInline(clean)}</p>);
+    if(clean){
+      const label=clean.match(/^(Important|Key point|Key takeaway|Remember|Tip|Note)\s*:\s*(.+)$/i);
+      if(label) blocks.push(<p className="important-point" key={`ip-${i}`}><strong>{label[1]}:</strong> {renderInline(label[2])}</p>);
+      else blocks.push(<p key={`p-${i}`}>{renderInline(clean)}</p>);
+    }
   });
   flush();
   return <div className="rich-text">{blocks}</div>;
@@ -211,8 +221,8 @@ function SettingsPage({user,theme,setTheme,onBack,onLogout,onDelete,busy,error})
 
 function AboutPage({onBack}){
   const team=[
-    {name:"Ritik Verma",role:"Team Lead & Full-Stack Developer",desc:"Leads CodeWise development across product architecture, frontend and backend."},
-    {name:"Rudransh Tomar",role:"Backend & API Engineer",desc:"Focuses on server architecture, APIs, authentication and data services."},
+    {name:"Ritik Verma",role:"Team Lead & Full-Stack Developer",desc:"Leads CodeWise development across product architecture, frontend and backend.",image:"/ritik-verma.png"},
+    {name:"Rudransh Tomar",role:"Backend & API Engineer",desc:"Focuses on server architecture, APIs, authentication and data services.",image:"/rudransh-tomar.png"},
     {name:"Adarsh Tiwari",role:"Frontend Engineer & UI Specialist",desc:"Builds responsive interfaces and polished interaction experiences."},
     {name:"Riddhi Goswami",role:"AI & Algorithms Lead",desc:"Focuses on intelligent learning experiences, DSA workflows and AI-assisted features."},
     {name:"Rudrika Chaurasia",role:"Product & UX Designer",desc:"Shapes user journeys, usability and the overall product experience."},
@@ -226,9 +236,16 @@ function AboutPage({onBack}){
     </div>
     <p className="about-copy">CodeWise is a collaborative learning platform designed to make DSA practice more interactive through guided teaching, explanations, hints, interview practice and debugging.</p>
     <div className="about-section-heading"><h2>The Team</h2><p>A focused team building the CodeWise experience.</p></div>
-    <div className="team-grid">{team.map(member=><article className="team-card" key={member.name}>
-      <div className="team-avatar">{member.name.charAt(0)}</div>
-      <div className="team-card-body"><h3>{member.name}</h3><strong>{member.role}</strong><p>{member.desc}</p></div>
+    <div className="team-grid">{team.map((member,index)=><article className="team-card" key={member.name}>
+      <div className="team-avatar-wrap">
+        {member.image?<img className="team-photo" src={member.image} alt={member.name}/>:<div className="team-avatar">{member.name.charAt(0)}</div>}
+        <span className="team-number">{String(index+1).padStart(2,"0")}</span>
+      </div>
+      <div className="team-card-body">
+        <div className="team-name-row"><h3>{member.name}</h3><span className="team-status">CodeWise</span></div>
+        <strong>{member.role}</strong>
+        <p>{member.desc}</p>
+      </div>
     </article>)}</div>
   </div>;
 }

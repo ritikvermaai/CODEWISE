@@ -127,7 +127,19 @@ ${history.slice(-12).map(item => `${item.role}: ${item.text}`).join("\n")}
 
 Student: ${text || "The student uploaded a file/image without text."}
 
-Use clear, readable plain text. Do not use Markdown heading markers such as #, ##, ###, or decorative ***. Do not wrap the whole answer in Markdown. Use short titled sections as plain text when helpful, with blank lines between sections. Use bullet points with simple hyphens only when a list improves clarity. Put code in normal fenced code blocks only when code is necessary. Adapt to the student's reasoning.`;
+Write the answer in clear, simple, professional language that is easy to scan on both desktop and mobile.
+
+Formatting rules:
+- Use Markdown headings such as ## Concept, ## Example, ## Complexity when a section needs a heading.
+- Use short bullet lists for important points, steps, rules, or takeaways.
+- Use **bold** for important terms, key ideas, warnings, and conclusions.
+- Prefer short paragraphs instead of large walls of text.
+- For an important takeaway, you may write **Important:** followed by the point.
+- Use numbered lists when steps must be followed in order.
+- Use fenced code blocks only when code is necessary.
+- Do not use decorative separators or excessive emojis.
+- Keep explanations direct and beginner-friendly, while preserving technical accuracy.
+- Adapt the depth and wording to the student's reasoning.`;
 
     const parts = [prompt, ...uploaded.map(file => createPartFromUri(file.uri, file.mimeType))];
     let response = null;
