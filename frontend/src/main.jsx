@@ -19,32 +19,69 @@ function renderInline(value){
 }
 function RichText({value}){
   const lines=String(value??"").replace(/\r/g,"").split("\n");
-  const blocks=[]; let list=[];
-  const flush=()=>{if(!list.length)return;blocks.push(<ul key={`ul-${blocks.length}`}>{list.map((item,i)=><li key={i}>{renderInline(item)}</li>)}</ul>);list=[];};
+  const blocks=[];
+  let bullets=[];
+  let numbers=[];
+  const flushBullets=()=>{
+    if(!bullets.length)return;
+    blocks.push(<ul key={`ul-${blocks.length}`}>{bullets.map((item,i)=><li key={`b-${i}`}>{renderInline(item)}</li>)}</ul>);
+    bullets=[];
+  };
+  const flushNumbers=()=>{
+    if(!numbers.length)return;
+    blocks.push(<ol key={`ol-${blocks.length}`}>{numbers.map((item,i)=><li key={`n-${i}`}>{renderInline(item)}</li>)}</ol>);
+    numbers=[];
+  };
+  const flushLists=()=>{flushBullets();flushNumbers();};
+
   lines.forEach((raw,i)=>{
-    const line=String(raw??"").trimEnd();
-    if(!line.trim()){flush();blocks.push(<div className="md-spacer" key={`sp-${i}`}/>);return;}
-    const heading=line.match(/^#{1,6}\s+(.+)$/);
-    if(heading){flush();const level=Math.min(6,(heading[0].match(/^#+/)||["#"])[0].length);const Tag=`h${level}`;blocks.push(<Tag key={`h-${i}`}>{renderInline(heading[1])}</Tag>);return;}
-    const bullet=line.match(/^[-*+]\s+(.+)$/);
-    if(bullet){list.push(bullet[1]);return;}
-    const numbered=line.match(/^\d+[.)]\s+(.+)$/);
-    if(numbered){
-      flush();
-      const prev=blocks.at(-1);
-      if(prev?.type==="ol"){blocks[blocks.length-1]={...prev,props:{...prev.props,children:[...(prev.props?.children||[]),<li key={`ol-li-${i}`}>{renderInline(numbered[1])}</li>]}};}
-      else blocks.push(<ol key={`ol-${i}`}><li>{renderInline(numbered[1])}</li></ol>);
+    const line=String(raw??"").trim();
+    if(!line){
+      flushLists();
+      blocks.push(<div className="md-spacer" key={`sp-${i}`}/>);
       return;
     }
-    flush();
-    const clean=line.replace(/^---+$/g,"").trim();
-    if(clean){
-      const label=clean.match(/^(Important|Key point|Key takeaway|Remember|Tip|Note)\s*:\s*(.+)$/i);
-      if(label) blocks.push(<p className="important-point" key={`ip-${i}`}><strong>{label[1]}:</strong> {renderInline(label[2])}</p>);
-      else blocks.push(<p key={`p-${i}`}>{renderInline(clean)}</p>);
+
+    const heading=line.match(/^(#{1,6})\s+(.+)$/);
+    if(heading){
+      flushLists();
+      const level=Math.min(6,heading[1].length);
+      const Tag=`h${level}`;
+      blocks.push(<Tag key={`h-${i}`}>{renderInline(heading[2])}</Tag>);
+      return;
+    }
+
+    const bullet=line.match(/^[-*+]\s+(.+)$/);
+    if(bullet){
+      flushNumbers();
+      bullets.push(bullet[1]);
+      return;
+    }
+
+    const numbered=line.match(/^\d+[.)]\s+(.+)$/);
+    if(numbered){
+      flushBullets();
+      numbers.push(numbered[1]);
+      return;
+    }
+
+    flushLists();
+    const clean=line.replace(/^---+$/,"").trim();
+    if(!clean)return;
+
+    const label=clean.match(/^(Important|Key point|Key takeaway|Remember|Tip|Note)\s*:\s*(.+)$/i);
+    if(label){
+      blocks.push(
+        <p className="important-point" key={`ip-${i}`}>
+          <strong>{label[1]}:</strong>{" "}{renderInline(label[2])}
+        </p>
+      );
+    }else{
+      blocks.push(<p key={`p-${i}`}>{renderInline(clean)}</p>);
     }
   });
-  flush();
+
+  flushLists();
   return <div className="rich-text">{blocks}</div>;
 }
 const VALID_MODES=new Set(["Teacher","Explain","Hint","Interview","Debug"]);
