@@ -1,11 +1,12 @@
 import bcrypt from "bcryptjs";import User from "../models/User.js";import Chat from "../models/Chat.js";
 const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-const safe=u=>({id:u.publicId,name:u.name,email:u.email,createdAt:u.createdAt});
+const safe=u=>({id:u.publicId,name:u.name,email:u.email,createdAt:u.createdAt,role:u.role==="owner"?"owner":"user",requestUsage:{count:u.requestCount||0,limit:50,windowStartedAt:u.requestWindowStartedAt||null}});
 
 export async function account(req,res){res.json({account:safe(req.user)})}
 
 export async function update(req,res){
   const u=await User.findById(req.user._id);if(!u)return res.status(404).json({message:"Account not found"});
+  // role is intentionally never accepted from client input; only direct database changes may assign "owner".
   if(req.body.name!==undefined){const name=String(req.body.name).trim();if(!name)return res.status(400).json({message:"Name cannot be empty"});u.name=name.slice(0,80)}
   await u.save();res.json({account:safe(u)})
 }
