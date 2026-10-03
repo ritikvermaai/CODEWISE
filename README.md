@@ -1,69 +1,65 @@
 # CodeWise
 
-Minimal professional coding and DSA learning app with React, Node.js, MongoDB and Gemini.
+CodeWise is an AI-powered DSA learning platform designed to help students understand Data Structures and Algorithms through guided learning instead of simply giving them answers.
 
-## UI
-- ChatGPT-style minimal interface
-- Bottom composer/search bar
-- File + image upload
-- 5 modes: Teacher, Explain, Hint, Interview, Debug
-- Dark/light theme
-- Full chat history in left sidebar
-- Sign in/create account at bottom-left
-- Account management and deletion
+It provides AI-powered teaching, explanations, hints, debugging assistance, and interview-style practice in one platform.
 
-## Smart local replies
-Common greetings, small talk, thanks, capability questions, and clearly unrelated topics are answered by CodeWise with predefined responses on the Node.js server. These messages do **not** call the Gemini API.
+---
 
-Coding/DSA questions and messages with uploaded files use Gemini when configured.
+## What is CodeWise?
 
-## Gemini reliability
-Transient Gemini errors such as 429/5xx are retried with backoff. If the primary model remains temporarily unavailable, CodeWise tries `GEMINI_FALLBACK_MODEL` and finally returns a friendly fallback response without crashing the backend.
+Learning DSA can be difficult when students get stuck on a problem and do not know what to try next.
 
-## Security
-- bcrypt password hashing
-- JWT authentication
-- every chat query is scoped by authenticated user ID
-- chat titles/messages encrypted at rest with AES-256-GCM
-- each user has a random data key wrapped by a server encryption key
-- no admin route exposes user chat data
+CodeWise acts like an interactive DSA mentor.
 
-This is database-at-rest protection, not a mathematically absolute guarantee against an operator with full production server/secret access. True E2E encryption would prevent the backend from sending plaintext content to Gemini.
+Instead of only providing a final solution, the AI can:
 
-## Run with one command
+- Explain concepts in simple language
+- Guide students toward the solution
+- Provide small hints
+- Help debug incorrect code
+- Conduct interview-style practice
+- Analyze uploaded images and files
+- Maintain conversation history
+- Adapt responses based on the selected learning mode
 
-1. Set `JWT_SECRET`, `DATA_ENCRYPTION_KEY`, and `GEMINI_API_KEY` in `backend/.env`.
-2. Install once:
+The goal is to help users understand the problem and improve their problem-solving ability.
 
-```bash
-npm install
-npm run install:all
-```
+---
 
-3. Run everything:
+# How the AI Works
 
-```bash
-npm run start:all
-```
+CodeWise uses Google's Gemini API as its AI engine.
 
-MongoDB starts in Docker, then backend and frontend start together.
+The application does not simply send the user's message directly to Gemini.
 
-Frontend: http://localhost:5173
-Backend: http://localhost:5000
+A request passes through several stages before the AI generates a response.
 
-## Generate encryption key
-
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-```
-
-## EmailJS OTP setup
-
-The project supports email OTP verification for signup and OTP-based password reset. EmailJS is used only for delivery; OTP generation, hashing, expiry, attempt limits, and verification stay on the Node.js backend.
-
-1. Create an EmailJS account and connect an email service.
-2. Create two templates: signup verification and password reset.
-3. Each template should accept the recipient email and include `{{otp}}`; `{{user_name}}` and `{{expires_in}}` are also supplied.
-4. Copy the service ID, public key, private key (if enabled), and template IDs into `backend/.env`.
-
-For production, configure an appropriate transactional email service in EmailJS for better deliverability.
+```text
+User
+  ↓
+CodeWise Frontend
+  ↓
+Authentication
+  ↓
+Request Validation
+  ↓
+Request Quota Check
+  ↓
+Chat History Retrieval
+  ↓
+Selected AI Mode
+  ↓
+Prompt Construction
+  ↓
+Gemini API
+  ↓
+AI Response
+  ↓
+Response Processing
+  ↓
+Encrypted Chat Storage
+  ↓
+Frontend
+  ↓
+User
